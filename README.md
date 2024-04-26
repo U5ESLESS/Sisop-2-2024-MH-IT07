@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 #define LOG_MAX_LENGTH 200
 ```
 2. Deklarasi Fungsi
-- Mencatat aktivitas user kedalam file .log
+- Mencatat aktivitas user kedalam file `.log`
 ```
 void log_activity(char *user, char *activity, int status) {
     char log_filename[50];
@@ -207,5 +207,86 @@ void log_activity(char *user, char *activity, int status) {
     // save .log
     fprintf(log_file, "[%s]-%d-%s_%s\n", timestamp, getpid(), activity, status ? "JALAN" : "GAGAL");
     fclose(log_file);
+}
+```
+- Menampilkan aktivitas user yang disimpan pada file `.log`
+```
+void display_user_activity(char *user) {
+    char log_filename[50];
+    sprintf(log_filename, "%s%s", user, LOG_FILE_EXTENSION);
+    FILE *log_file = fopen(log_filename, "r");
+    if (log_file == NULL) {
+        perror("Gagal membuka file.log!");
+        exit(EXIT_FAILURE);
+    }
+
+    char line[LOG_MAX_LENGTH];
+    printf("Aktivitas pengguna %s:\n", user);
+    while (fgets(line, LOG_MAX_LENGTH, log_file) != NULL) {
+        printf("%s", line);
+    }
+
+    fclose(log_file);
+}
+```
+- Melakukan monitoring proses terkait user
+```
+void monitor(char *user) {
+//    printf("Memulai Monitoring %s\n...", user);
+    char log_filename[50];
+    sprintf(log_filename, "%s%s", user, LOG_FILE_EXTENSION);
+    FILE *log_file = fopen(log_filename, "a");
+    if (log_file == NULL) {
+        perror("Gagal membuka file.log!");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(log_file, "Memulai Monitoring %s\n", user);
+    fflush(log_file);
+
+    while (1) {
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            perror("Error!");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            dup2(fileno(log_file), STDOUT_FILENO);
+            execlp("ps", "ps", "-u", user, NULL);
+            perror("Eksekusi Gagal!");
+            exit(EXIT_FAILURE);
+        } else {
+            wait(NULL);
+        }
+
+        sleep(1);
+    }
+
+    fclose(log_file);
+}
+```
+- Menghentikan monitoring proses user
+```
+void stop_monitor(char *user) {
+    char log_filename[50];
+    sprintf(log_filename, "%s%s", user, LOG_FILE_EXTENSION);
+    FILE *log_file = fopen(log_filename, "a");
+    if (log_file == NULL) {
+        perror("Gagal membuka file.log!");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(log_file, "Stop Monitoring %s\n", user);
+    fclose(log_file);
+    exit(EXIT_SUCCESS);
+}
+```
+- Memblock semua proses terkait user
+```
+void block(char *user) {
+    printf("Memblokir Proses %s\n", user);
+    char cmd[100];
+    sprintf(cmd, "pkill -u %s", user);
+    system(cmd);
 }
 ```
