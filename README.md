@@ -290,3 +290,33 @@ void block(char *user) {
     system(cmd);
 }
 ```
+3. Fungsi `main`
+```
+
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Perintah Tersedia : %s -m <Start> | -s <Stop> | -c <Block> | -a <Unblock>\n", argv[0]);
+        return 1;
+    }
+
+    char *user = argv[2];
+
+    if (strcmp(argv[1], "-m") == 0) {
+        monitor(user);
+        log_activity(user, "Memulai Monitoring...", 0);
+    } else if (strcmp(argv[1], "-s") == 0) {
+        stop_monitor(user);
+    } else if (strcmp(argv[1], "-c") == 0) {
+        block(user); // block
+        log_activity(user, "Menggagalkan proses", 0); 
+    } else if (strcmp(argv[1], "-a") == 0) {
+        // unblock
+        printf("Invalid! Belum selesai.\n");
+    } else {
+        printf("Perintah tidak diketahui!\n");
+        return 1;
+    }
+
+    return 0;
+}
+```
