@@ -165,6 +165,9 @@ int main(int argc, char *argv[]) {
     return 0;
 } 
 ```
+- Compile program menggunakan command `gcc -o admin admin.c`
+- Run program menggunakan command `./admin <perintah> <user>`
+
 ### Penjelasan Script
 1. Library dan konstanta yang digunakan
 ```
