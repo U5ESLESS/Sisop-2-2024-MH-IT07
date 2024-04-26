@@ -3,6 +3,7 @@
 
 ## Soal 3
 Pak Heze adalah seorang admin yang baik. Beliau ingin membuat sebuah program admin yang dapat memantau para pengguna sistemnya. Bantulah Pak Heze untuk membuat program  tersebut!
+
 a.  Nama program tersebut dengan nama admin.c
 b. Program tersebut memiliki fitur menampilkan seluruh proses yang dilakukan oleh seorang user dengan menggunakan command:
   ./admin <user>
