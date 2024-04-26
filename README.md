@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
 } 
 ```
 ### Penjelasan Script
-1. Library dan konstanta yang di gunakan
+1. Library dan konstanta yang digunakan
 ```
 #include <stdio.h>
 #include <stdlib.h>
@@ -180,3 +180,32 @@ int main(int argc, char *argv[]) {
 
 #define LOG_FILE_EXTENSION ".log"
 #define LOG_MAX_LENGTH 200
+```
+2. Deklarasi Fungsi
+- Mencatat aktivitas user kedalam file .log
+```
+void log_activity(char *user, char *activity, int status) {
+    char log_filename[50];
+    time_t now;
+    struct tm *tm_info;
+    FILE *log_file;
+
+    sprintf(log_filename, "%s%s", user, LOG_FILE_EXTENSION);
+
+    log_file = fopen(log_filename, "a");
+    if (log_file == NULL) {
+        perror("Gagal membuka file.log!");
+        exit(EXIT_FAILURE);
+    }
+
+    // realtime
+    now = time(NULL);
+    tm_info = localtime(&now);
+    char timestamp[20];
+    strftime(timestamp, 20, "%d:%m:%Y-%H:%M:%S", tm_info);
+
+    // save .log
+    fprintf(log_file, "[%s]-%d-%s_%s\n", timestamp, getpid(), activity, status ? "JALAN" : "GAGAL");
+    fclose(log_file);
+}
+```
