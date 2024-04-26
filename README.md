@@ -164,5 +164,19 @@ int main(int argc, char *argv[]) {
 
     return 0;
 } 
+```
+### Penjelasan Script
+1. Library dan konstanta yang di gunakan
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
+#include <sys/wait.h>
 
-  
+#define LOG_FILE_EXTENSION ".log"
+#define LOG_MAX_LENGTH 200
