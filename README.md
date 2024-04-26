@@ -292,7 +292,6 @@ void block(char *user) {
 ```
 3. Fungsi `main`
 ```
-
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         printf("Perintah Tersedia : %s -m <Start> | -s <Stop> | -c <Block> | -a <Unblock>\n", argv[0]);
