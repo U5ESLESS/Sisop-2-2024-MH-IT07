@@ -1,5 +1,284 @@
 # Sisop-2-2024-MH-IT07
 
+## Soal 1
+Gavriel adalah seorang cyber security enthusiast. Suatu hari, ia dikontrak oleh sebuah perusahaan ternama untuk membuat sebuah program yang cukup rumit dengan bayaran jutaan rupiah. Karena tergoda dengan nominal bayaran tersebut, Gavriel langsung menerima tawaran tersebut. Setelah mencoba membuat dan mengembangkan program tersebut selama seminggu, laptop yang digunakan Gavriel mengalami overheat dan mati total sehingga harus dilarikan ke tukang servis terdekat. Karena keterbatasan waktu dalam pembuatan program dan tidak ingin mengecewakan perusahaan, Gavriel meminta bantuan kalian untuk membuat program tersebut dengan ketentuan sebagai berikut:
+a. Program dapat menerima input path berupa ‘argv’ untuk mengatur folder dimana file akan dieksekusi
+b. Program tersebut berfungsi untuk mereplace string dengan ketentuan sebagai berikut:
+    - String m4LwAr3 direplace dengan string [MALWARE]
+    - String 5pYw4R3 direplace dengan string [SPYWARE]
+    - String R4nS0mWaR3 direplace dengan string [RANSOMWARE]
+c. Program harus berjalan secara daemon, dan tidak diperbolehkan menggunakan command system() dalam pembuatan program
+d. Program akan secara terus menerus berjalan di background dengan jeda 15 detik
+e. Catat setiap penghapusan string yang dilakukan oleh program pada sebuah file bernama virus.log dengan format: [dd-mm-YYYY][HH:MM:SS] Suspicious string at <file_name> successfully replaced!
+
+Contoh penggunaan: ./virus /home/user/virus
+
+Contoh isi file sebelum program dijalankan:
+pU=-JWQ$5$)D-[??%AVh]$cB6bm4LwAr3jEQC2p3R{HV]=-AUaxj:Qe+h
+!aNX,i:!z3W=2;.tHc3&S+}6F)CFf%tfZLP1*w5m1PAzZJUux(
+Pd&f8$F5=E?@#[6jd{TJKj]5pYw4R3{KK1?hz384$ge@iba5GAj$gqB41
+#C&&a}M9C#f64Eb.?%c)dGbCvJXtU[?SE4h]BY4e1PR4nS0mWaR3{]S/{w?*
+
+
+Contoh isi file setelah setelah program dijalankan:
+pU=-JWQ$5$)D-[??%AVh]$cB6b[MALWARE]jEQC2p3R{HV]=-AUaxj:Qe+h
+!aNX,i:!z3W=2;.tHc3&S+}6F)CFf%tfZLP1*w5m1PAzZJUux(
+Pd&f8$F5=E?@#[6jd{TJKj][SPYWARE]{KK1?hz384$ge@iba5GAj$gqB41
+#C&&a}M9C#f64Eb.?%c)dGbCvJXtU[?SE4h]BY4e1P[RANSOMWARE]{]S/{w?*
+
+
+
+### Langkah Pengerjaan
+- Buat file text untuk string yang akan di replace `nano test.txt`
+- Isi dari text `test.txt`
+
+pU=-JWQ$5$)D-[??%AVh]$cB6bm4LwAr3jEQC2p3R{HV]=-AUaxj:Qe+h
+!aNX,i:!z3W=2;.tHc3&S+}6F)CFf%tfZLP1*w5m1PAzZJUux(
+Pd&f8$F5=E?@#[6jd{TJKj]5pYw4R3{KK1?hz384$ge@iba5GAj$gqB41
+#C&&a}M9C#f64Eb.?%c)dGbCvJXtU[?SE4h]BY4e1PR4nS0mWaR3{]S/{w?*
+
+- buat file virus.c
+- isi file virus.c menggunakan code c berikut
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <time.h>
+
+void replaceString(char *str) {
+    char *ptr;
+    while ((ptr = strstr(str, "m4LwAr3")) != NULL) {
+        memcpy(ptr, "[MALWARE]", 9);
+    }
+    while ((ptr = strstr(str, "5pYw4R3")) != NULL) {
+        memcpy(ptr, "[SPYWARE]", 9);
+    }
+    while ((ptr = strstr(str, "R4nS0mWaR3")) != NULL) {
+        memcpy(ptr, "[RANSOMWARE]", 12);
+    }
+}
+
+void writeToLog(const char *filename) {
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char buffer[26];
+    strftime(buffer, 26, "[%d-%m-%Y][%H:%M:%S]", tm_info);
+
+    FILE *logFile = fopen("virus.log", "a");
+    fprintf(logFile, "%s Suspicious string at %s successfully replaced!\n", buffer, filename);
+    fclose(logFile);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <path>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t pid, sid;
+
+    pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chdir(argv[1])) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    while (1) {
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir(argv[1])) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
+                if (ent->d_type == DT_REG) {
+                    char filename[512];
+                    snprintf(filename, sizeof(filename), "%s/%s", argv[1], ent->d_name);
+                    FILE *file = fopen(filename, "r+");
+                    if (file != NULL) {
+                        fseek(file, 0, SEEK_END);
+                        long fileSize = ftell(file);
+                        fseek(file, 0, SEEK_SET);
+                        char *fileContent = (char *)malloc(fileSize + 1);
+                        fread(fileContent, 1, fileSize, file);
+                        fileContent[fileSize] = '\0';
+                        replaceString(fileContent);
+                        fseek(file, 0, SEEK_SET);
+                        fwrite(fileContent, 1, fileSize, file);
+                        fclose(file);
+                        free(fileContent);
+                        writeToLog(filename);
+                    }
+                }
+            }
+            closedir(dir);
+        }
+        sleep(15);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+```
+
+- Compile program menggunakan command `gcc -o virus.c virus`
+- Run program menggunakan command `./virus <perintah> <user>`
+- program `virus` akan berjalan sebagai daemon dan merubah string yang mencurigakan
+- untuk mengecek apakah `virus` berjalan sebagai daemon bisa dilihat menggunakan `ps aux | grep virus`
+
+### Penjelasan Script
+1. Library yang digunakan
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <time.h>
+```
+2. Fungsi
+- void dari replaceString
+- Fungsi ini bertugas untuk mencari dan mengganti beberapa string tertentu dalam teks dengan string yang lain
+```
+void replaceString(char *str) {
+    char *ptr;
+    while ((ptr = strstr(str, "m4LwAr3")) != NULL) {
+        memcpy(ptr, "[MALWARE]", 9);
+    }
+    while ((ptr = strstr(str, "5pYw4R3")) != NULL) {
+        memcpy(ptr, "[SPYWARE]", 9);
+    }
+    while ((ptr = strstr(str, "R4nS0mWaR3")) != NULL) {
+        memcpy(ptr, "[RANSOMWARE]", 12);
+    }
+}
+
+```
+- void dari writeToLog
+- Fungsi ini digunakan untuk menulis ke file log bernama "virus.log" dan melakukan berbagai fungsi seperti berikut
+`
+mencatat waktu menggunakan time(NULL), Membuka file "virus.log" dalam mode "append" ("a"), Menulis ke file log yang berisi waktu dan nama file yang sudah berhasil dirubah, Menutup file log menggunakan fclose().
+`
+```
+void writeToLog(const char *filename) {
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char buffer[26];
+    strftime(buffer, 26, "[%d-%m-%Y][%H:%M:%S]", tm_info);
+
+    FILE *logFile = fopen("virus.log", "a");
+    fprintf(logFile, "%s Suspicious string at %s successfully replaced!\n", buffer, filename);
+    fclose(logFile);
+}
+
+```
+- Fungsi utama (int main)
+- Memeriksa apakah jumlah argumen yang diberikan benar.
+```
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <path>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+```
+- Menggunakan fork() untuk memulai proses baru dan memastikan bahwa program berjalan sebagai daemon.
+```
+    pid_t pid, sid;
+
+    pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+```
+- Mengatur environment dengan umask(0) dan setsid().
+```
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chdir(argv[1])) < 0) {
+        exit(EXIT_FAILURE);
+    }
+```
+- Mengubah direktori kerja ke direktori yang diberikan sebagai argumen.
+- Menutup file descriptor standar.
+- Memproses setiap file dalam direktori yang ditentukan:
+```
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+```
+- Membuka direktori dan membaca setiap entri.
+- Jika entri adalah file reguler, membuka file, membaca isinya, dan memanggil replaceString untuk mengganti string yang mencurigakan.
+- Menulis kembali konten yang sudah dimodifikasi ke file dan menutup file.
+- Membebaskan memori yang dialokasikan untuk konten file.
+- Memanggil writeToLog untuk mencatat perubahan yang dilakukan.
+- Menunggu selama 15 detik sebelum memeriksa kembali.
+
+```
+    while (1) {
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir(argv[1])) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
+                if (ent->d_type == DT_REG) {
+                    char filename[512];
+                    snprintf(filename, sizeof(filename), "%s/%s", argv[1], ent->d_name);
+                    FILE *file = fopen(filename, "r+");
+                    if (file != NULL) {
+                        fseek(file, 0, SEEK_END);
+                        long fileSize = ftell(file);
+                        fseek(file, 0, SEEK_SET);
+                        char *fileContent = (char *)malloc(fileSize + 1);
+                        fread(fileContent, 1, fileSize, file);
+                        fileContent[fileSize] = '\0';
+                        replaceString(fileContent);
+                        fseek(file, 0, SEEK_SET);
+                        fwrite(fileContent, 1, fileSize, file);
+                        fclose(file);
+                        free(fileContent);
+                        writeToLog(filename);
+                    }
+                }
+            }
+            closedir(dir);
+        }
+        sleep(15);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+```
+## Soal 2
+tidak mengerjakan
 
 ## Soal 3
 Pak Heze adalah seorang admin yang baik. Beliau ingin membuat sebuah program admin yang dapat memantau para pengguna sistemnya. Bantulah Pak Heze untuk membuat program  tersebut!
@@ -322,7 +601,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ```
-
 ## Soal 4
 
 soal nomor 4 adalah user diminta untuk membuka berbagai macam aplikasi dengan banyak jendela aplikasi dalam satu command dan menamai file programnya setup.c
