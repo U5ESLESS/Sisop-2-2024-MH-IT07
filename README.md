@@ -379,6 +379,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 ## Fungsi Untuk Membuka Aplikasi
+```
 void loadRunningProcesses() {
     FILE *file = fopen(FILENAME, "r");
     if (file != NULL) {
@@ -386,7 +387,6 @@ void loadRunningProcesses() {
         fclose(file);
     }
 }
-
 void launchApps(char *apps[], int num_apps[]) {
     pid_t pid;
 
@@ -404,8 +404,9 @@ void launchApps(char *apps[], int num_apps[]) {
         }
     }
 }
-Lalu setelah itu untuk proses buka app saya menambahkan fungsi untuk menambahkan pid ke file.txt
-
+```
+Lalu setelah itu untuk proses buka app saya menambahkan fungsi untuk menambahkan pid ke file run.txt
+```
 void addProcess(pid_t pid) {
     if (num_run < MAX_APPS) {
         run[num_run++] = pid;
@@ -500,9 +501,9 @@ int launchFromConfig(char *config_file) {
 
     fclose(file);
 }
-
+```
 ## Kill Proses
-Pada kill proses saya menggunakan pkill untuk ngekill isi pada file.conf dan 
+```
 void terminateApp(char *app) {
     if (fork() == 0) {
         execlp("pkill", "pkill", app, NULL);
@@ -538,3 +539,5 @@ void terminateProcesses() {
         fclose(file);
     }
 }
+```
+Fungsi `terminateApp` akan memanggil pkill untuk menghentikan proses berdasarkan nama aplikasi yang diberikan. Fungsi `terminateFromConfig` akan membaca daftar nama aplikasi dari file konfigurasi dan menghentikan proses untuk setiap aplikasi tersebut. Sedangkan fungsi `terminateProcesses` akan membaca daftar PID dari file run.txt dan menghentikan setiap proses dengan menggunakan kill system call.
